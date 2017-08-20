@@ -1,16 +1,24 @@
 package org.ausimus.wurmunlimited.mods.autoalert;
 
+import com.wurmonline.server.Players;
 import com.wurmonline.server.Server;
+import com.wurmonline.server.Servers;
+import com.wurmonline.server.villages.Village;
+import com.wurmonline.server.villages.Villages;
 import org.gotti.wurmunlimited.modloader.interfaces.Configurable;
 import org.gotti.wurmunlimited.modloader.interfaces.ServerPollListener;
 import org.gotti.wurmunlimited.modloader.interfaces.WurmServerMod;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class Initiator  implements WurmServerMod, ServerPollListener, Configurable {
     private Properties prop = new Properties();
+
     private static boolean transmitTwitter;
 
     private long lastPoll0 = 0;
@@ -54,6 +62,11 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
     private boolean useAlert08;
     private boolean useAlert09;
 
+    private boolean useDeedAlert;
+    private long DA_lastPoll = 0;
+    private long DA_pollSeconds;
+    private int MaxDays;
+    private boolean autoDisband;
 
 
     @Override
@@ -89,6 +102,11 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
 
         Seconds09 = Long.parseLong(properties.getProperty("Seconds09", Long.toString(Seconds09)));
         useAlert09 = Boolean.parseBoolean(properties.getProperty("useAlert08", Boolean.toString(useAlert09)));
+
+        useDeedAlert = Boolean.parseBoolean(properties.getProperty("useDeedAlert", Boolean.toString(useDeedAlert)));
+        DA_pollSeconds = Long.parseLong(properties.getProperty("DA_pollSeconds", Long.toString(DA_pollSeconds)));
+        MaxDays = Integer.parseInt(properties.getProperty("MaxDays", Integer.toString(MaxDays)));
+        autoDisband = Boolean.parseBoolean(properties.getProperty("autoDisband", Boolean.toString(autoDisband)));
     }
 
     @Override
@@ -145,11 +163,37 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
             RunAlert09();
             lastPoll09 = sysTime;
         }
+
+        if (useDeedAlert && System.currentTimeMillis() - second * DA_pollSeconds > DA_lastPoll) {
+            RunDeedAlert();
+            DA_lastPoll = sysTime;
+        }
+
+    }
+
+    private void RunDeedAlert() {
+        Village[] villages = Villages.getVillages();
+        // noinspection ForLoopReplaceableByForEach
+        for (int index = 0; index < villages.length; ++index) {
+            if (villages[index] != null) {
+                long lastLogout = Players.getInstance().getLastLogoutForPlayer(villages[index].getMayor().getId());
+                long deltaDay = System.currentTimeMillis() - lastLogout;
+                long days = TimeUnit.MILLISECONDS.toDays(deltaDay);
+                if (!villages[index].isPermanent && days >= MaxDays) {
+                    WriteLog(villages[index].getName() + " mayor " + villages[index].getMayor().getName() + " has not logged in for " + days + " days.");
+                    Server.getInstance().broadCastAlert(villages[index].getName() + " mayor " + villages[index].getMayor().getName() + " has not logged in for " + days + " days.", transmitTwitter);
+                    if (autoDisband) {
+                        WriteLog(villages[index].getName() + " Disbanded by " + Servers.getLocalServerName() + " (Mayor NoLogin). " + " Mayor Name = " + villages[index].getMayor().getName() + ".");
+                        villages[index].disband(Servers.getLocalServerName() + " (Mayor NoLogin)");
+                    }
+                }
+            }
+        }
     }
 
     private void RunAlert0() {
         try {
-            InputStream input = new FileInputStream("mods/autoalert.properties");
+            InputStream input = new FileInputStream("mods/AutoAlerts.properties");
             prop.load(input);
             Server.getInstance().broadCastAlert(prop.getProperty("Alert0"), transmitTwitter);
         } catch (java.io.IOException e) {
@@ -159,7 +203,7 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
 
     private void RunAlert01() {
         try {
-            InputStream input = new FileInputStream("mods/autoalert.properties");
+            InputStream input = new FileInputStream("mods/AutoAlerts.properties");
             prop.load(input);
             Server.getInstance().broadCastAlert(prop.getProperty("Alert01"), transmitTwitter);
         } catch (java.io.IOException e) {
@@ -169,7 +213,7 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
 
     private void RunAlert02() {
         try {
-            InputStream input = new FileInputStream("mods/autoalert.properties");
+            InputStream input = new FileInputStream("mods/AutoAlerts.properties");
             prop.load(input);
             Server.getInstance().broadCastAlert(prop.getProperty("Alert02"), transmitTwitter);
         } catch (java.io.IOException e) {
@@ -179,7 +223,7 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
 
     private void RunAlert03() {
         try {
-            InputStream input = new FileInputStream("mods/autoalert.properties");
+            InputStream input = new FileInputStream("mods/AutoAlerts.properties");
             prop.load(input);
             Server.getInstance().broadCastAlert(prop.getProperty("Alert03"), transmitTwitter);
         } catch (java.io.IOException e) {
@@ -189,7 +233,7 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
 
     private void RunAlert04() {
         try {
-            InputStream input = new FileInputStream("mods/autoalert.properties");
+            InputStream input = new FileInputStream("mods/AutoAlerts.properties");
             prop.load(input);
             Server.getInstance().broadCastAlert(prop.getProperty("Alert04"), transmitTwitter);
         } catch (java.io.IOException e) {
@@ -199,7 +243,7 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
 
     private void RunAlert05() {
         try {
-            InputStream input = new FileInputStream("mods/autoalert.properties");
+            InputStream input = new FileInputStream("mods/AutoAlerts.properties");
             prop.load(input);
             Server.getInstance().broadCastAlert(prop.getProperty("Alert05"), transmitTwitter);
         } catch (java.io.IOException e) {
@@ -209,7 +253,7 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
 
     private void RunAlert06() {
         try {
-            InputStream input = new FileInputStream("mods/autoalert.properties");
+            InputStream input = new FileInputStream("mods/AutoAlerts.properties");
             prop.load(input);
             Server.getInstance().broadCastAlert(prop.getProperty("Alert06"), transmitTwitter);
         } catch (java.io.IOException e) {
@@ -219,7 +263,7 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
 
     private void RunAlert07() {
         try {
-            InputStream input = new FileInputStream("mods/autoalert.properties");
+            InputStream input = new FileInputStream("mods/AutoAlerts.properties");
             prop.load(input);
             Server.getInstance().broadCastAlert(prop.getProperty("Alert07"), transmitTwitter);
         } catch (java.io.IOException e) {
@@ -229,7 +273,7 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
 
     private void RunAlert08() {
         try {
-            InputStream input = new FileInputStream("mods/autoalert.properties");
+            InputStream input = new FileInputStream("mods/AutoAlerts.properties");
             prop.load(input);
             Server.getInstance().broadCastAlert(prop.getProperty("Alert08"), transmitTwitter);
         } catch (java.io.IOException e) {
@@ -239,9 +283,23 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
 
     private void RunAlert09() {
         try {
-            InputStream input = new FileInputStream("mods/autoalert.properties");
+            InputStream input = new FileInputStream("mods/AutoAlerts.properties");
             prop.load(input);
             Server.getInstance().broadCastAlert(prop.getProperty("Alert09"), transmitTwitter);
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void WriteLog(String data) {
+        try {
+            String logFile = "mods/AutoAlerts/log.txt";
+            FileWriter writeLog = new FileWriter(logFile, true);
+            BufferedWriter bufferedLogWriter = new BufferedWriter(writeLog);
+            DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss ");
+            Date timeStamp = new Date();
+            bufferedLogWriter.write(dateFormat.format(timeStamp) + data + "\n");
+            bufferedLogWriter.close();
         } catch (java.io.IOException e) {
             e.printStackTrace();
         }
