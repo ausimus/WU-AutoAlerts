@@ -19,6 +19,8 @@ import java.util.concurrent.TimeUnit;
 public class Initiator  implements WurmServerMod, ServerPollListener, Configurable {
     private Properties prop = new Properties();
 
+    private long sysTime = System.currentTimeMillis();
+
     private static boolean transmitTwitter;
 
     private long lastPoll0 = 0;
@@ -112,59 +114,58 @@ public class Initiator  implements WurmServerMod, ServerPollListener, Configurab
     @Override
     public void onServerPoll() {
         long second = 1000L;
-        long sysTime = System.currentTimeMillis();
 
-        if (useAlert0 && System.currentTimeMillis() - second * Seconds0 > lastPoll0) {
+        if (useAlert0 && sysTime - second * Seconds0 > lastPoll0) {
             RunAlert0();
             lastPoll0 = sysTime;
         }
 
-        if (useAlert01 && System.currentTimeMillis() - second * Seconds01 > lastPoll01) {
+        if (useAlert01 && sysTime - second * Seconds01 > lastPoll01) {
             RunAlert01();
             lastPoll01 = sysTime;
         }
 
-        if (useAlert02 && System.currentTimeMillis() - second * Seconds02 > lastPoll02) {
+        if (useAlert02 && sysTime - second * Seconds02 > lastPoll02) {
             RunAlert02();
             lastPoll02 = sysTime;
         }
 
-        if (useAlert03 && System.currentTimeMillis() - second * Seconds03 > lastPoll03) {
+        if (useAlert03 && sysTime - second * Seconds03 > lastPoll03) {
             RunAlert03();
             lastPoll03 = sysTime;
         }
 
-        if (useAlert04 && System.currentTimeMillis() - second * Seconds04 > lastPoll04) {
+        if (useAlert04 && sysTime - second * Seconds04 > lastPoll04) {
             RunAlert04();
             lastPoll04 = sysTime;
         }
 
-        if (useAlert05 && System.currentTimeMillis() - second * Seconds05 > lastPoll05) {
+        if (useAlert05 && sysTime - second * Seconds05 > lastPoll05) {
             RunAlert05();
             lastPoll05 = sysTime;
         }
 
-        if (useAlert06 && System.currentTimeMillis() - second * Seconds06 > lastPoll06) {
+        if (useAlert06 && sysTime - second * Seconds06 > lastPoll06) {
             RunAlert06();
             lastPoll06 = sysTime;
         }
 
-        if (useAlert07 && System.currentTimeMillis() - second * Seconds07 > lastPoll07) {
+        if (useAlert07 && sysTime - second * Seconds07 > lastPoll07) {
             RunAlert07();
             lastPoll07 = sysTime;
         }
 
-        if (useAlert08 && System.currentTimeMillis() - second * Seconds08 > lastPoll08) {
+        if (useAlert08 && sysTime - second * Seconds08 > lastPoll08) {
             RunAlert08();
             lastPoll08 = sysTime;
         }
 
-        if (useAlert09 && System.currentTimeMillis() - second * Seconds09 > lastPoll09) {
+        if (useAlert09 && sysTime - second * Seconds09 > lastPoll09) {
             RunAlert09();
             lastPoll09 = sysTime;
         }
 
-        if (useDeedAlert && System.currentTimeMillis() - second * DA_pollSeconds > DA_lastPoll) {
+        if (useDeedAlert && sysTime - second * DA_pollSeconds > DA_lastPoll) {
             RunDeedAlert();
             DA_lastPoll = sysTime;
         }
